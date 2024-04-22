@@ -1,8 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify, make_response
+import jwt
+import datetime
+from flask_cors import CORS, cross_origin
+from functools import wraps
 
 from surprise import KNNBasic
 from surprise import Dataset
 from surprise import Reader
+from surprise import Trainset
 
 from collections import defaultdict
 from operator import itemgetter
@@ -13,7 +18,32 @@ import os
 import csv
 import sqlite3
 
+from bs4 import BeautifulSoup
+import requests
+import lxml
+
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADER'] = 'Content-Type'
+app.config['SECRET_KEY'] = b'\xb5ek9Q\x82\xea:I\x08\x1cF'
+
+def token_required(func):
+    @wraps(func)
+    def decorated(*args, **kwargs):
+        token = request.args.get('token')
+
+        if not token: 
+            return jsonify({'message': 'Token is missing'}), 403
+        
+        try: 
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        except:
+            return jsonify({'message': 'Token is invalid', 'token': token}), 403
+        
+        return func(*args, **kwargs)
+    
+    return decorated
+        
 
 def ratings_db_connection():
     conn = None
@@ -25,12 +55,16 @@ def ratings_db_connection():
 
 # User sign up
 @app.route('/sign-up', methods=['POST'])
+@cross_origin()
 def sign_up():
     connection = sqlite3.connect('book-recommendations.db')
     cursor = connection.cursor()
 
     username = request.form['username']
     password = request.form['password']
+
+    print("Username: {username}")
+    print("Password: {password}")
     
     sql = """INSERT INTO users (username, password)
              VALUES (?, ?)"""
@@ -40,8 +74,40 @@ def sign_up():
 
     return f"User with the id: {cur.lastrowid} created successfully"
 
+# User log in
+@app.route('/log-in', methods=['POST'])
+@cross_origin()
+def log_in():
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    username = request.form['username']
+    password = request.form['password']
+
+    statement = f"SELECT * FROM users WHERE username='{username}' AND password='{password}';"
+    cursor.execute(statement)
+    data = cursor.fetchone()
+    
+    if data:
+        # session['logged_in'] = True
+        token = jwt.encode({
+            'user': request.form['username'],
+            'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)
+        },
+            app.config['SECRET_KEY'])
+        print(data[0]) # data is a tuple (user_id, username, password)
+        return jsonify({'token': token, 'message': "user is in db", 'user_id': data[0]})
+    else: 
+        print("huh")
+        return make_response('Unable to verify', 401, {'WWW.Authenticate': 'Basic realm:"Authentication Failed!"'})
 
 
+# Test protected route
+@app.route('/protected', methods=['GET'])
+@cross_origin()
+@token_required
+def protected():
+    return jsonify({'message': 'This is only available for people with valid tokens.'})
 
 def load_dataset():
     reader = Reader(line_format="user item rating", sep=',', skip_lines=1)
@@ -68,11 +134,12 @@ def getBookName(book_id, book_id_to_name):
   else:
     return ""
   
+@app.route('/recommendations', methods=['POST'])
+@cross_origin()
+def recommendations():
 
-@app.route('/', methods=['GET'])
-def recommend():
+    # Create similarity matrix from dataset
     ratings_dataset, book_id_to_name = load_dataset()
-    # Build full Surprise training set from dataset
     trainset = ratings_dataset.build_full_trainset()
     similarity_matrix = KNNBasic(sim_options = {
          'name': 'cosine',
@@ -80,15 +147,24 @@ def recommend():
          })\
          .fit(trainset)\
          .compute_similarities()
-    
-    new_test_subject_ratings = []
-    new_test_subject_ratings.append((52, 4.0))
-    new_test_subject_ratings.append((159, 5.0))
-    new_test_subject_ratings.append((260, 5.0))
+
+    # Get user id from request
+    user_id = request.form['user_id']
+
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+    statement = f"SELECT * FROM ratings WHERE user_id='{user_id}';"
+    cursor.execute(statement)
+    user_ratings = cursor.fetchall()  # user_ratings is a list of tuples 
+
+    cleaned_user_ratings = []
+
+    for rating in user_ratings:
+        cleaned_user_ratings.append((trainset.to_inner_iid(str(rating[2])), rating[3])) # append tuple of (book_id, rating)
 
     # k_neighbours is in descending order
     # k_neighbours has 20 most similar items - items for which users have given similar ratings
-    k_neighbours = heapq.nlargest(20, new_test_subject_ratings, key=lambda t: t[1])
+    k_neighbours = heapq.nlargest(20, cleaned_user_ratings, key=lambda t: t[1])
 
     # candidates[item_inner_id] = score_sum
     candidates = defaultdict(float)
@@ -107,7 +183,7 @@ def recommend():
 
     # Build a dictionary of books the user has already read
     has_read = {}
-    for item_inner_id, rating in new_test_subject_ratings:
+    for item_inner_id, rating in cleaned_user_ratings:
         has_read[item_inner_id] = 1
 
     # Add items to list of user's recommendations if they are similar AND has not already been read
@@ -117,16 +193,52 @@ def recommend():
     # candidates.items() contains the key-value pairs of the dictionary, as tuples in a list
     # each tuple is (item_inner_id, rating_sum)
     for item_inner_id, rating_sum in sorted(candidates.items(), key=itemgetter(1), reverse=True):
+        # Add book to recommendations if user has not read it
         if not item_inner_id in has_read:
-            recommendations.append(getBookName(trainset.to_raw_iid(item_inner_id), book_id_to_name))
+            raw_book_id = trainset.to_raw_iid(item_inner_id)
+
+            statement = f"SELECT * FROM books WHERE book_id='{raw_book_id}';"
+            cursor.execute(statement)
+            book = cursor.fetchone()  # book is a list of tuples
+
+            title = book[10]
+            goodreads_book_id = book[2]
+            authors = book[8]
+            average_rating = book[13]
+
+            # html_text = requests.get('https://www.goodreads.com/book/show/{goodreads_book_id}.{title}').text
+            html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
+            soup = BeautifulSoup(html_text, 'lxml')
+            general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
+            summary = general_summary.find('span', class_ = 'Formatted').text
+
+            recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary))
             position += 1
             if (position > 10): break  # We only want top 10
 
     for rec in recommendations:
         print("Book: ", rec)
 
-    return {'a': 'b'}, 201
+    # recommendations is a list of tuples (title, raw item id)
+    return jsonify(recommendations)
 
+
+@app.route('/get-summary', methods=['POST'])
+@cross_origin()
+def get_summary():
+    # Get goodreads book id from request
+    goodreads_book_id = request.form['goodreads_book_id']
+    title = request.form['title']
+
+    # html_text = requests.get('https://www.goodreads.com/book/show/38447.{title}').text
+    html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
+    # html_text = requests.get('https://www.goodreads.com/book/show/38447.The_Handmaid_s_Tale').text
+    soup = BeautifulSoup(html_text, 'lxml')
+    general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
+    summary = general_summary.find('span', class_ = 'Formatted').text
+    print(summary)
+
+    return summary
 
 if __name__ == '__main__':
     
