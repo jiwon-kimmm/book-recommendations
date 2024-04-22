@@ -25,10 +25,15 @@ const LeftCardSubcontainer = styled(CardSubcontainer)`
     border-radius: 30px 0px 0px 30px;
 `
 
-const Image = styled.div`
+const ImageContainer = styled.div`
     width: 300px;
     height: 400px;
     background-color: white;
+`
+
+const StyledImage = styled.img`
+    object-fit: cover;
+    width:100%;
 `
 
 interface BookCardProps {
@@ -36,14 +41,17 @@ interface BookCardProps {
     author: string;
     rating: string;
     summary: string;
+    image_url: string;
 }
 
 export default function BookCard(props: BookCardProps) {
-    const { title, author, rating, summary } = props;
+    const { title, author, rating, summary, image_url } = props;
     return (
         <Card>
             <LeftCardSubcontainer>
-                <Image />
+                <ImageContainer>
+                    <StyledImage src={image_url} />
+                </ImageContainer>
             </LeftCardSubcontainer>
             <RightCardSubcontainer>
                 <Heading1>{title}</Heading1>
