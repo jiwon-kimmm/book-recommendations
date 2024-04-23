@@ -14,7 +14,7 @@ const List = styled.ul`
 export default function Home() {
 
     const [loading, setLoading] = useState<boolean>(true);
-    const [formData, setFormData] = useState({user_id: "100"});
+    const [formData, setFormData] = useState({user_id: "53426"});
     const [recommendations, setRecommendations] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -33,11 +33,10 @@ export default function Home() {
             setLoading(false);
         });
         }
-            
+        
+        // setFormData({user_id: window.localStorage.getItem("userID") || '{}'});
         fetchRecommendations();
     }, []);
-
-    
 
     return (
         <MainPanel>
@@ -54,8 +53,6 @@ export default function Home() {
                             rating={bookRec[4]}
                             summary={bookRec[5]}
                             image_url={bookRec[6]}
-                            // goodreads_book_id is bookRec[2]
-                            // fetchSummary(bookRec[2], bookRec[0])
                             />
                         </li>
                         

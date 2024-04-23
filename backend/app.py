@@ -205,14 +205,14 @@ def recommendations():
             goodreads_book_id = book[2]
             authors = book[8]
             average_rating = book[13]
+            image_url = book[22]
 
-            # html_text = requests.get('https://www.goodreads.com/book/show/{goodreads_book_id}.{title}').text
             html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
             soup = BeautifulSoup(html_text, 'lxml')
             general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
             summary = general_summary.find('span', class_ = 'Formatted').text
 
-            recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary))
+            recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary, image_url))
             position += 1
             if (position > 10): break  # We only want top 10
 
@@ -230,9 +230,7 @@ def get_summary():
     goodreads_book_id = request.form['goodreads_book_id']
     title = request.form['title']
 
-    # html_text = requests.get('https://www.goodreads.com/book/show/38447.{title}').text
     html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
-    # html_text = requests.get('https://www.goodreads.com/book/show/38447.The_Handmaid_s_Tale').text
     soup = BeautifulSoup(html_text, 'lxml')
     general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
     summary = general_summary.find('span', class_ = 'Formatted').text
