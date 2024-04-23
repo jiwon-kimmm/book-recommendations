@@ -26,3 +26,15 @@ cursor = conn.cursor()
 cur = cursor.execute(sql, (53424, "testuser", "testpass"))
 conn.commit()
 
+sql = """DROP TABLE reviews;"""
+cur = cursor.execute(sql)
+conn.commit()
+
+create_review_table_query = (''' CREATE TABLE reviews
+                                (user_id        INTEGER       PRIMARY KEY,
+                                 book_id        INTEGER       NOT NULL,
+                                 rating         INTEGER       NOT NULL,
+                                 headline       TEXT,
+                                 review         TEXT
+                              );''')
+conn.execute(create_review_table_query)

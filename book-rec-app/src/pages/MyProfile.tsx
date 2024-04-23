@@ -1,12 +1,16 @@
 import React from 'react';
 import { Heading1 } from '../constants/Text';
-import { MainPanel } from '../components/MainPanel';
+import { MainPanel, MiddlePane, RightPane } from '../components/MainPanel';
 import { WelcomeModal } from '../components/WelcomeModal';
+import styled from 'styled-components';
 
 export default function MyProfile() {
     return (
-        <MainPanel>
-            <WelcomeModal />
-        </MainPanel>
+        <>
+            <MiddlePane>
+                <WelcomeModal />
+            </MiddlePane>
+            <RightPane></RightPane>
+        </>
     );
 }

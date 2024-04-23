@@ -57,7 +57,7 @@ export default function Navbar() {
                         <NavbarLink to="/">Home</NavbarLink>
                     </NavbarLinkContainer>
                     <NavbarLinkContainer>
-                        <NavbarLink to="/">Best Sellers</NavbarLink>
+                        <NavbarLink to="/bestsellers">Best Sellers</NavbarLink>
                     </NavbarLinkContainer>
                 </LeftContainer>
                 <RightContainer>

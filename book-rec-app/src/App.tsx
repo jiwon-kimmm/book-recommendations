@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import MyProfile from './pages/MyProfile';
 import Navbar from './components/Navbar';
 import Bookshelf from './components/Bookshelf';
+import Bestsellers from './pages/Bestsellers';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -39,6 +40,12 @@ const RightPane = styled.div`
   margin-top: 20px;
 `
 
+const TestPane = styled.div`
+  flex: 75%;
+  display: flex;
+  background-color: white;
+`
+
 function App() {
   
   return (
@@ -53,17 +60,26 @@ function App() {
           <Bookshelf />
         </LeftPane>
 
-        <MiddlePane>
+        {/* <MiddlePane>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/my-profile" element={<MyProfile />} />
           </Routes>
         </MiddlePane>
 
-        <RightPane />
-
+        <RightPane>
+          <Routes>
+            <Route path="/bestsellers" element={<Bestsellers />} />
+          </Routes>
+        </RightPane> */}
+        <TestPane>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/my-profile" element={<MyProfile />} />
+            <Route path="/bestsellers" element={<Bestsellers />} />
+          </Routes>
+        </TestPane>
       </PageBody>
-      
     </Router>
   );
 }

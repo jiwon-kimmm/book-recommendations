@@ -1,20 +1,31 @@
 import styled from 'styled-components';
-import { MainPanel } from '../components/MainPanel';
+import { MainPanel, MiddlePane, RightPane } from '../components/MainPanel';
 import BookCard from '../components/BookCard';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { Heading1 } from '../constants/Text';
+import { ReviewModal } from '../components/ReviewModal';
+import { dummyRecommendations } from '../data/books';
 
 
 const List = styled.ul`
     list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 `
-
+const ListItem = styled.li`
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display:flex;
+    flex-direction: row;
+`
 
 export default function Home() {
 
-    const [loading, setLoading] = useState<boolean>(true);
-    const [formData, setFormData] = useState({user_id: "53426"});
+    const [loading, setLoading] = useState<boolean>(false);
+    const [formData, setFormData] = useState({user_id: "100"});
     const [recommendations, setRecommendations] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -39,26 +50,30 @@ export default function Home() {
     }, []);
 
     return (
-        <MainPanel>
-            { loading ? 
-                <Heading1>
-                    Loading...
-                </Heading1> : 
-                <List>
-                    {recommendations.map((bookRec) => (
-                        <li key={bookRec[1]}>
-                            <BookCard 
-                            title={bookRec[0]}
-                            author={bookRec[3]}
-                            rating={bookRec[4]}
-                            summary={bookRec[5]}
-                            image_url={bookRec[6]}
-                            />
-                        </li>
-                        
-                    ))}
-                </List>
-            }
-        </MainPanel>
+        <>
+                { loading ? 
+                    <Heading1>
+                        Loading...
+                    </Heading1> : 
+                    <List>
+                        {recommendations.map((bookRec) => (
+                            <ListItem key={bookRec[2]}>
+                                    <MiddlePane>
+                                        <BookCard 
+                                            title={bookRec[0]}
+                                            author={bookRec[3]}
+                                            rating={bookRec[4]}
+                                            summary={bookRec[5]}
+                                            image_url={bookRec[6]}
+                                        />
+                                    </MiddlePane>
+                                    <RightPane>
+                                        <ReviewModal current_book_id={bookRec[2]}></ReviewModal>
+                                    </RightPane>
+                            </ListItem>
+                        ))}
+                    </List>
+                }
+        </>
     );
 }

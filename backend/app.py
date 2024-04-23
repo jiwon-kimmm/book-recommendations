@@ -71,6 +71,7 @@ def sign_up():
     
     cur = cursor.execute(sql, (username, password))
     connection.commit()
+    cursor.close()
 
     return f"User with the id: {cur.lastrowid} created successfully"
 
@@ -87,6 +88,7 @@ def log_in():
     statement = f"SELECT * FROM users WHERE username='{username}' AND password='{password}';"
     cursor.execute(statement)
     data = cursor.fetchone()
+    cursor.close()
     
     if data:
         # session['logged_in'] = True
@@ -219,6 +221,8 @@ def recommendations():
     for rec in recommendations:
         print("Book: ", rec)
 
+    cursor.close()
+
     # recommendations is a list of tuples (title, raw item id)
     return jsonify(recommendations)
 
@@ -237,6 +241,32 @@ def get_summary():
     print(summary)
 
     return summary
+
+@app.route('/create-review', methods=['POST'])
+@cross_origin()
+def create_review():
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    user_id = request.form['user_id']
+    book_id = request.form['book_id']
+    rating = request.form['rating']
+    headline = request.form['headline']
+    review = request.form['review']
+
+    sql = """INSERT INTO reviews (user_id, book_id, rating, headline, review)
+         VALUES (?, ?, ?, ?, ?)"""
+    cur = cursor.execute(sql, (user_id, book_id, rating, headline, review))
+    connection.commit()
+
+    sql = """INSERT INTO ratings (user_id, book_id, rating)
+          VALUES (?, ?, ?)"""
+    cur = cursor.execute(sql, (user_id, book_id, rating))
+
+    cursor.close()
+
+    return jsonify({'user_id': user_id, 'book_id': book_id, 'rating': rating, 'headline': headline, 'review': review})
+
 
 if __name__ == '__main__':
     

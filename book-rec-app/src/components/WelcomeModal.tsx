@@ -41,6 +41,7 @@ const SubmitButton = styled.button`
     border-radius: 20px;
     padding: 12px;
     cursor: pointer;
+    border: none;
 `
 
 const ChangeLoginButton = styled.button`
@@ -91,7 +92,8 @@ export function WelcomeModal() {
                     console.log(response.data);
                     setCookies("access_token", response.data.token);
                     window.localStorage.setItem("userID", response.data.user_id);
-                    navigate("/")
+                    // navigate("/")
+                    navigate("/bestsellers")
                 });
         } else {
             const url = 'http://127.0.0.1:105/sign-up';
@@ -102,6 +104,8 @@ export function WelcomeModal() {
             })
                 .then((response) => {
                     console.log(response.data);
+                    setLogin(!login);
+                    navigate("/my-profile");
                 });
         }
     };
