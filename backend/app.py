@@ -218,10 +218,12 @@ def recommendations():
             position += 1
             if (position > 10): break  # We only want top 10
 
+    cursor.close()
+
     for rec in recommendations:
         print("Book: ", rec)
 
-    cursor.close()
+    
 
     # recommendations is a list of tuples (title, raw item id)
     return jsonify(recommendations)
@@ -262,6 +264,7 @@ def create_review():
     sql = """INSERT INTO ratings (user_id, book_id, rating)
           VALUES (?, ?, ?)"""
     cur = cursor.execute(sql, (user_id, book_id, rating))
+    connection.commit()
 
     cursor.close()
 

@@ -31,7 +31,7 @@ cur = cursor.execute(sql)
 conn.commit()
 
 create_review_table_query = (''' CREATE TABLE reviews
-                                (user_id        INTEGER       PRIMARY KEY,
+                                (user_id        INTEGER       NOT NULL,
                                  book_id        INTEGER       NOT NULL,
                                  rating         INTEGER       NOT NULL,
                                  headline       TEXT,
