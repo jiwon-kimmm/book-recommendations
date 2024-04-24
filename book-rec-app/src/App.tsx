@@ -62,7 +62,7 @@ function App() {
         
         <TestPane>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Bestsellers />} />
             <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/bestsellers" element={<Bestsellers />} />
           </Routes>

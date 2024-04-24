@@ -22,6 +22,8 @@ from bs4 import BeautifulSoup
 import requests
 import lxml
 
+import json
+
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADER'] = 'Content-Type'
@@ -269,6 +271,23 @@ def create_review():
     cursor.close()
 
     return jsonify({'user_id': user_id, 'book_id': book_id, 'rating': rating, 'headline': headline, 'review': review})
+
+
+@app.route('/get-books', methods=['GET'])
+@cross_origin()
+def get_books():
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    sql = """SELECT title FROM books;"""
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    connection.commit()
+    cursor.close()
+
+    json_data = json.dumps([{"title": row[0]} for row in data])
+
+    return json_data
 
 
 if __name__ == '__main__':
