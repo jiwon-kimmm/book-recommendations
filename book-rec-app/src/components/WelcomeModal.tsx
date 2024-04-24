@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { GRAY } from "../constants/Colours";
-import { Heading2Bold, Heading3, ParagraphText } from "../constants/Text";
+import { Heading2Bold, Heading3, SmallText } from "../constants/Text";
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom'
@@ -49,6 +49,13 @@ const ChangeLoginButton = styled.button`
     background: none;
     cursor: pointer;
     margin: 40px;
+    font-size: 14px;
+`
+
+const LoginError = styled.div`
+    color: red;
+    width: 100%;
+    text-align: left;
 `
 
 const defaultFormData = {
@@ -61,6 +68,7 @@ export function WelcomeModal() {
     const { username, password } = formData;
     const [login, setLogin] = useState<boolean>(true);
     const [_, setCookies] = useCookies(["access_token"]);
+    const [error, setError] = useState<boolean>(false);
     const navigate = useNavigate();
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,11 +97,15 @@ export function WelcomeModal() {
                 },
             })
                 .then((response) => {
+                    setError(false);
                     console.log(response.data);
                     setCookies("access_token", response.data.token);
                     window.localStorage.setItem("userID", response.data.user_id);
                     // navigate("/")
                     navigate("/bestsellers")
+                })
+                .catch((error) => {
+                    setError(true);
                 });
         } else {
             const url = 'http://127.0.0.1:105/sign-up';
@@ -128,7 +140,14 @@ export function WelcomeModal() {
                     value={password}
                     placeholder={ login ? "Enter your password" : "Create a password"}
                     onChange={onChange}
-                /> 
+                />
+                <LoginError>
+                {
+                    error && (
+                        <SmallText>Invalid username or password</SmallText>
+                    )
+                }
+                </LoginError>
                 { login ? 
                     <SubmitButton>Log in</SubmitButton> : 
                     <SubmitButton>Create account</SubmitButton>

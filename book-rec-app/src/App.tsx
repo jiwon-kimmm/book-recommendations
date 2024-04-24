@@ -59,19 +59,7 @@ function App() {
         <LeftPane>
           <Bookshelf />
         </LeftPane>
-
-        {/* <MiddlePane>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/my-profile" element={<MyProfile />} />
-          </Routes>
-        </MiddlePane>
-
-        <RightPane>
-          <Routes>
-            <Route path="/bestsellers" element={<Bestsellers />} />
-          </Routes>
-        </RightPane> */}
+        
         <TestPane>
           <Routes>
             <Route path="/" element={<Home />} />
