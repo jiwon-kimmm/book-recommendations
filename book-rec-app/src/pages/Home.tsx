@@ -44,6 +44,7 @@ export default function Home() {
     const [recommendations, setRecommendations] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [cookies, setCookies] = useCookies(["access_token"]);
+    const [userId, setUserId] = useState("");
 
     useEffect(() => {
         const fetchRecommendations = async () => {
@@ -61,7 +62,9 @@ export default function Home() {
             });
         }
         
+        // setUserId(window.localStorage.getItem("userID") || '{}');
         // setFormData({user_id: window.localStorage.getItem("userID") || '{}'});
+        setUserId("53425");
         fetchRecommendations();
     }, []);
 
@@ -96,6 +99,7 @@ export default function Home() {
                                                 summary={bookRec[5]}
                                                 image_url={bookRec[6]}
                                                 book_id={bookRec[1]}
+                                                user_id={userId}
                                             />
                                         </MiddlePane>
                                         <RightPane>

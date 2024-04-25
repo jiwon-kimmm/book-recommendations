@@ -2,10 +2,13 @@ import styled from "styled-components";
 import { Heading1, Heading2, Heading3, ParagraphText } from "../constants/Text";
 import { GRAY } from "../constants/Colours";
 import Heart from "../assets/heart.svg"
-import Checkmark from "../assets/checkmark.svg";
+import CheckmarkChecked from "../assets/checkmark-checked.svg";
+import CheckmarkUnchecked from "../assets/checkmark-unchecked.svg"
 import { MiddlePane, RightPane } from "./MainPanel";
 import { ReviewModal } from "./ReviewModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from 'axios';
+import { PostedReview } from "./PostedReview";
 
 const Card = styled.div`
     width: 100%;
@@ -67,11 +70,35 @@ interface BookCardProps {
     summary: string;
     image_url: string;
     book_id: number;
+    user_id: string;
 }
 
 export default function BookCard(props: BookCardProps) {
-    const { title, author, rating, summary, image_url, book_id } = props;
+    const { title, author, rating, summary, image_url, book_id, user_id } = props;
     const [review, setReview] = useState<boolean>(false);
+    const [reviewPresent, setReviewPresent] = useState<boolean>(false);
+    const [userReviews, setUserReviews] = useState([]);
+
+    useEffect(() => {
+        const url = 'http://127.0.0.1:105/get-user-reviews';
+        axios.post(url, {user_id: user_id}, {
+            headers: { 
+                "Content-Type": "multipart/form-data" 
+            },
+        })
+            .then((response) => {
+                setUserReviews(response.data);
+        });
+    }, [review])
+
+    useEffect(() => {
+        for (let i = 0; i < userReviews.length; ++i) {
+            if (+userReviews[i][1] == book_id) {
+               setReviewPresent(true);
+               break; 
+            }
+        }
+    }, [userReviews])
 
     const createReview = () => {
         setReview(!review);
@@ -95,14 +122,25 @@ export default function BookCard(props: BookCardProps) {
                         </BookInfoContainer>
                         <ReactionContainer>
                                 <ReactionIcon src={Heart} />
-                                <ReactionIcon src={Checkmark} onClick={createReview}/>
+                                {
+                                    reviewPresent ? 
+                                    <ReactionIcon src={CheckmarkChecked}/> : 
+                                    <ReactionIcon src={CheckmarkUnchecked} onClick={createReview}/>
+                                }
                         </ReactionContainer>
                     </RightCardSubcontainer>
                 </Card>
             </MiddlePane>
             <RightPane>
-                {review && 
+                {review && !reviewPresent &&
                     (<ReviewModal current_book_id={book_id}></ReviewModal>)
+                }
+                {reviewPresent &&
+                    (
+                        <PostedReview 
+                            current_book_id={book_id}
+                            user_id={user_id} />
+                    )
                 }
             </RightPane>
         </>

@@ -71,9 +71,7 @@ export default function Navbar() {
             .then(res => {
                 setBookData(res.data); 
                 // setBookData(dummyRecommendations);
-                console.log(res.data.slice(0, 99));
             })
-        console.log(dummyRecommendations);
     }, [])
 
     return (

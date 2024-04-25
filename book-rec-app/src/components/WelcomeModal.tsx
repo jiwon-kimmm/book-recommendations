@@ -88,7 +88,6 @@ export function WelcomeModal() {
         setFormData(defaultFormData);
 
         if (login) {
-            console.log(formData);
 
             const url = 'http://127.0.0.1:105/log-in';
             axios.post(url, formData, {
@@ -98,7 +97,6 @@ export function WelcomeModal() {
             })
                 .then((response) => {
                     setError(false);
-                    console.log(response.data);
                     setCookies("access_token", response.data.token);
                     window.localStorage.setItem("userID", response.data.user_id);
                     // navigate("/")
@@ -115,7 +113,6 @@ export function WelcomeModal() {
                 },
             })
                 .then((response) => {
-                    console.log(response.data);
                     setLogin(!login);
                     navigate("/my-profile");
                 });

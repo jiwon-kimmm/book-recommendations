@@ -290,6 +290,40 @@ def get_books():
     return json_data
 
 
+@app.route('/get-user-reviews', methods=['POST'])
+@cross_origin()
+def get_user_reviews():
+    user_id = request.form['user_id']
+
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    sql = f"SELECT * FROM reviews WHERE user_id='{user_id}';"
+    cursor.execute(sql)
+    data = cursor.fetchall() 
+    connection.commit()
+    cursor.close()
+
+    return jsonify(data)
+
+@app.route('/get-specific-review', methods=['POST'])
+@cross_origin()
+def get_specific_review():
+    user_id = request.form['user_id']
+    book_id = request.form['book_id']
+
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    sql = f"SELECT * FROM reviews WHERE user_id='{user_id}' AND book_id='{book_id}';"
+    cursor.execute(sql)
+    data = cursor.fetchone() 
+    connection.commit()
+    cursor.close()
+
+    return jsonify(data)
+
+
 if __name__ == '__main__':
     
     # np.save("similarity-matrix", similarity_matrix)

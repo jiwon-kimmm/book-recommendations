@@ -117,6 +117,7 @@ export function ReviewModal(props: ReviewModalProps) {
         });
     }
 
+
     return (
         <ReviewModalContainer>
             <Form onSubmit={handleSubmit}>
@@ -139,7 +140,7 @@ export function ReviewModal(props: ReviewModalProps) {
                     placeholder={ "Add a review..."}
                     onChange={onTextAreaChange}
                 />
-                <AddButton onClick={()=>{}}>
+                <AddButton>
                     Add
                 </AddButton>
             </Form>

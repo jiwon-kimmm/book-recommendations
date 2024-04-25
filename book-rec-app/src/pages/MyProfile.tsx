@@ -20,10 +20,6 @@ export default function MyProfile() {
                     (<WelcomeModal />):
                     <div>
                         <Heading1>Cookies present</Heading1>
-                        <SearchBar 
-                            placeholder="Search for a title..."
-                            data="Here"
-                        />
                         <button onClick={logout}>Logout</button>
                     </div>
                     

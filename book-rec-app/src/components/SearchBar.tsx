@@ -42,6 +42,8 @@ const DataItem = styled.div`
         background-color: lightgrey;
     }
     cursor: pointer;
+    padding: 4px;
+    margin: 0 6px 0 6px;
 `
 
 type BookDataProps = {
@@ -71,7 +73,7 @@ export function SearchBar(props: SearchBarProps) {
     }
 
     const handleBookClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        
+
     }
 
     return (
