@@ -3,7 +3,7 @@ import BookCard from "../components/BookCard";
 export default function Bestsellers () {
     return (
         <>
-            <BookCard
+            <BookCard 
                 title={"Title"}
                 author={"Author"}
                 rating={"5"}

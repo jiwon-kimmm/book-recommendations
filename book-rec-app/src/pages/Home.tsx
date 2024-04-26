@@ -8,6 +8,7 @@ import { ReviewModal } from '../components/ReviewModal';
 import RingLoader from 'react-spinners/RingLoader'
 import { LoadingMessages } from '../constants/LoadingMessages';
 import { useCookies } from 'react-cookie';
+import { dummyRecommendations } from '../data/books';
 
 const List = styled.ul`
     list-style-type: none;
@@ -42,6 +43,7 @@ export default function Home() {
     const [loading, setLoading] = useState<boolean>(false);
     const [formData, setFormData] = useState({user_id: "101"});
     const [recommendations, setRecommendations] = useState([]);
+    // const [recommendations, setRecommendations] = useState<{ title: string; author: string; rating: string; summary: string; isbn: string; image_url: string; book_id: number }[]>([]);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [cookies, setCookies] = useCookies(["access_token"]);
     const [userId, setUserId] = useState("");
@@ -66,6 +68,7 @@ export default function Home() {
         // setFormData({user_id: window.localStorage.getItem("userID") || '{}'});
         setUserId("53425");
         fetchRecommendations();
+        // setRecommendations(dummyRecommendations);
     }, []);
 
     return (
@@ -90,8 +93,18 @@ export default function Home() {
                         {
                             recommendations.length != 0 ?
                             recommendations.map((bookRec) => (
+                                // <ListItem key={bookRec.isbn}>
+                                //             <BookCard 
+                                //                 title={bookRec.title}
+                                //                 author={bookRec.author}
+                                //                 rating={bookRec.rating}
+                                //                 summary={bookRec.summary}
+                                //                 image_url={bookRec.image_url}
+                                //                 book_id={bookRec.book_id}
+                                //                 user_id={userId}
+                                //             />
+                                // </ListItem>
                                 <ListItem key={bookRec[1]}>
-                                        <MiddlePane>
                                             <BookCard 
                                                 title={bookRec[0]}
                                                 author={bookRec[3]}
@@ -101,10 +114,7 @@ export default function Home() {
                                                 book_id={bookRec[1]}
                                                 user_id={userId}
                                             />
-                                        </MiddlePane>
-                                        <RightPane>
-                                            <ReviewModal current_book_id={bookRec[1]}></ReviewModal>
-                                        </RightPane>
+                                        
                                 </ListItem>
                             )) 
                             :

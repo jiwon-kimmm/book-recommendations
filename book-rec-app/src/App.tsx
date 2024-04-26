@@ -6,6 +6,7 @@ import MyProfile from './pages/MyProfile';
 import Navbar from './components/Navbar';
 import Bookshelf from './components/Bookshelf';
 import Bestsellers from './pages/Bestsellers';
+import BookView from './pages/BookView';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -62,11 +63,13 @@ function App() {
         
         <TestPane>
           <Routes>
-            <Route path="/" element={<Bestsellers />} />
+            <Route path="/" element={<Home />} />
             <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/bestsellers" element={<Bestsellers />} />
+            <Route path="/:bookId" element={<BookView />} />
           </Routes>
         </TestPane>
+
       </PageBody>
     </Router>
   );

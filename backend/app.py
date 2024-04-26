@@ -323,6 +323,22 @@ def get_specific_review():
 
     return jsonify(data)
 
+@app.route('/get-book', methods=['POST'])
+@cross_origin()
+def get_book():
+    book_id = request.form['book_id']
+
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    sql = f"SELECT * FROM books WHERE book_id='{book_id}';"
+    cursor.execute(sql)
+    data = cursor.fetchone() 
+    connection.commit()
+    cursor.close()
+
+    return jsonify(data) 
+
 
 if __name__ == '__main__':
     

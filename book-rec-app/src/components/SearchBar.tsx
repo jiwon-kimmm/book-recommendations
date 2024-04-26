@@ -73,7 +73,7 @@ export function SearchBar(props: SearchBarProps) {
     }
 
     const handleBookClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-
+        // navigate(/book_id)
     }
 
     return (
