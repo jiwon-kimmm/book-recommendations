@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 
 const SearchBarWrapper = styled.div`
@@ -9,7 +10,7 @@ const SearchInputDiv = styled.div`
 `
 
 const StyledInput = styled.input`
-    background-color: white;
+    background-color: #b9978540;
     border: 0px;
     border-radius: 2px;
     border-top-right-radius: 0px;
@@ -18,6 +19,13 @@ const StyledInput = styled.input`
     height: auto;
     width: 300px;
     font-size: 16px;
+    &:focus {
+        outline: none;
+    };
+    &::placeholder {
+        color: #989BA0;
+        font-weight: normal;
+    };
 `
 const DataResultDiv = styled.div`
     margin-top: 5px;
@@ -39,25 +47,29 @@ const DataItem = styled.div`
     align-items: center;
     color: black;
     &:hover {
-        background-color: lightgrey;
+        background-color: #b9978540;
     }
     cursor: pointer;
     padding: 4px;
     margin: 0 6px 0 6px;
+    transition: 0.3s;
 `
 
 type BookDataProps = {
     title: string;
+    book_id: string;
 }
 
-type SearchBarProps = {
+type SearchBarProps = { 
     placeholder: string;
     data: BookDataProps[];
 }
 
 export function SearchBar(props: SearchBarProps) {
     const { placeholder, data } = props;
+    const [hideSearch, setHideSearch] = useState<boolean>(false);
     const [filteredData, setFilteredData] = useState<BookDataProps[]>([]);
+    const navigate = useNavigate();
 
     const handleFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
         const inputEntered = event.target.value;
@@ -66,18 +78,28 @@ export function SearchBar(props: SearchBarProps) {
         });
 
         if (inputEntered == "") {
-            setFilteredData([])
+            setFilteredData([]);
         } else {
             setFilteredData(newFilter);
         }
     }
 
-    const handleBookClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        // navigate(/book_id)
+    const handleBookClick = (bookId: string) => (event: React.MouseEvent<HTMLDivElement, MouseEvent>) =>{
+        // event.preventDefault();
+        navigate(`/${bookId}`);
+        window.location.reload();
+    };
+
+    const hideSearchFunction = (e: React.FocusEvent<HTMLDivElement, Element>) => {
+        setHideSearch(true);
+    }
+
+    const appearSearchFunction = (e: React.FocusEvent<HTMLDivElement, Element>) => {
+        setHideSearch(false);
     }
 
     return (
-        <SearchBarWrapper>
+        <SearchBarWrapper onBlur={hideSearchFunction} onFocus={appearSearchFunction}>
             <SearchInputDiv>
                 <StyledInput 
                     type="text" 
@@ -85,11 +107,12 @@ export function SearchBar(props: SearchBarProps) {
                     onChange={(e) => handleFilter(e)}
                 />
             </SearchInputDiv>
+            {/* { filteredData.length != 0 && !hideSearch && */}
             { filteredData.length != 0 &&
                 <DataResultDiv>
                     {filteredData.slice(0, 15).map((value, key) => {
                         return(
-                            <DataItem onClick={handleBookClick}>
+                            <DataItem key={value.book_id} onClick={handleBookClick(value.book_id)}>
                                 <p>{value.title}</p>
                             </DataItem>
                         );

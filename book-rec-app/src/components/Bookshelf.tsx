@@ -7,16 +7,23 @@ const BookshelfContainer = styled.div`
     height: 100vh;
     width: 20%;
     position: fixed;
-    background-color: ${GRAY};
+    background-color: white;
     box-sizing: border-box;
     padding: 30px;
     margin-right: 20px;
+    border-style: solid;
+    border-color: #D9D9D9;
+`
+
+const BookshelfDivider = styled.hr`
+    background: #D9D9D9;
 `
 
 export default function Bookshelf () {
     return (
         <BookshelfContainer>
             <Heading2Bold>My Bookshelf</Heading2Bold>
+            <BookshelfDivider />
         </BookshelfContainer>
     );
 }

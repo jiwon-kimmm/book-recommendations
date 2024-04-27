@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { GRAY } from "../constants/Colours";
 import axios from "axios";
+import { ParagraphTextBold } from "../constants/Text";
 
 const ReviewModalContainer = styled.div`
     width: 75%;
-    background-color: ${GRAY};
+    background-color: white;
     padding: 10px;
     height: fit-content;
+    border-style: solid;
+    border-color: #D9D9D9;
+    border-radius: 30px;
 `
 
 const Form = styled.form`
@@ -15,38 +19,52 @@ const Form = styled.form`
     flex-direction: column;
     gap: 16px;
     align-items: center;
-    width: 70%;
+    width: 80%;
     margin: auto;
     margin-top: 50px;
 `
 
 const StyledInput = styled.input`
-    border: none;
-    border-radius: 2px;
+    border-style: solid;
+    border-color: #D9D9D9;
+    border-radius: 20px;
     padding: 12px;
     width: 100%;
+    outline: none;
+    &:focus {
+        outline: none;
+    }
 `
 
 const StyledReviewTextArea = styled.textarea`
-    border: none;
-    border-radius: 2px;
+    border-color: #D9D9D9;
+    border-radius: 20px;
     padding: 12px;
     width: 100%;
     resize: none;
     height: 200px;
     font-family: "Inter", "sans-serif";
+    &:focus {
+        outline: none;
+    }
 `
 
 const AddButton = styled.button`
-    border-radius: 16px;
-    background-color: white;
+    border-radius: 30px;
+    background-color: #B99785;
     border: none;
-    padding: 10px;
     width: 80px;
     display: block;
     margin-right: 0;
     margin-left: auto;
     cursor: pointer;
+    color: white;
+    margin-bottom: 10px;
+    opacity: 0.8;
+    transition: 0.3s;
+    &:hover {
+        opacity: 1;
+    }
 `
 
 const defaultFormData = {
@@ -141,7 +159,7 @@ export function ReviewModal(props: ReviewModalProps) {
                     onChange={onTextAreaChange}
                 />
                 <AddButton>
-                    Add
+                    <ParagraphTextBold>Add</ParagraphTextBold>
                 </AddButton>
             </Form>
         </ReviewModalContainer>

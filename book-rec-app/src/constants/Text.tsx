@@ -23,6 +23,10 @@ export const ParagraphText = styled.p`
     font-size: 14px;
 `
 
+export const ParagraphTextBold = styled(ParagraphText)`
+    font-weight: bold;
+`
+
 export const SmallText = styled.p`
     font-size: 10px;
 `

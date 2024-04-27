@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { Heading1, Heading2, Heading3, ParagraphText } from "../constants/Text";
 import { GRAY } from "../constants/Colours";
-import Heart from "../assets/heart.svg"
+import HeartUnliked from "../assets/heart-unliked.svg"
 import CheckmarkChecked from "../assets/checkmark-checked.svg";
 import CheckmarkUnchecked from "../assets/checkmark-unchecked.svg"
 import { MiddlePane, RightPane } from "./MainPanel";
@@ -18,9 +18,11 @@ const Card = styled.div`
     margin-top: 20px;
 `
 const CardSubcontainer = styled.div`
-    background-color: ${GRAY};
+    background-color: #FFFFFF;
     padding: 0;
     float: left;
+    border-style: solid;
+    border-color: #D9D9D9;
 `
 
 const RightCardSubcontainer = styled(CardSubcontainer)`
@@ -29,10 +31,12 @@ const RightCardSubcontainer = styled(CardSubcontainer)`
     border-radius: 0px 30px 30px 0px;
     display: flex;
     flex-direction: row;
+    border-left: none;
 `
 const LeftCardSubcontainer = styled(CardSubcontainer)`
     border-radius: 30px 0px 0px 30px;
     padding: 20px;
+    border-right: none;
 `
 
 const ImageContainer = styled.div`
@@ -46,7 +50,12 @@ const StyledImage = styled.img`
 `
 const ReactionIcon = styled.img`
     width: 40px;
+    opacity: 0.8;
     cursor: pointer;
+    &:hover {
+        cursor: pointer;
+        opacity: 1;
+    };
 `
 
 const ReactionContainer = styled.div`
@@ -56,6 +65,7 @@ const ReactionContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: 6px;
+    z-index: 1;
 `
 
 const BookInfoContainer = styled.div`
@@ -112,7 +122,7 @@ export default function BookCard(props: BookCardProps) {
                         <ImageContainer>
                             <StyledImage src={image_url} />
                         </ImageContainer>
-                    </LeftCardSubcontainer>
+                    </LeftCardSubcontainer> 
                     <RightCardSubcontainer>
                         <BookInfoContainer>
                             <Heading1>{title}</Heading1>
@@ -121,7 +131,7 @@ export default function BookCard(props: BookCardProps) {
                             <ParagraphText>{summary}</ParagraphText>
                         </BookInfoContainer>
                         <ReactionContainer>
-                                <ReactionIcon src={Heart} />
+                                <ReactionIcon src={HeartUnliked} />
                                 {
                                     reviewPresent ? 
                                     <ReactionIcon src={CheckmarkChecked}/> : 

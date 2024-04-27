@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { GRAY } from "../constants/Colours";
 import axios from "axios";
+import { ParagraphTextBold } from "../constants/Text";
 
 const ReviewModalContainer = styled.div`
     width: 75%;
-    background-color: ${GRAY};
+    background-color: #b9978540;
     padding: 10px;
     height: fit-content;
+    border-radius: 30px;
+    border-style: solid;
+    border-color: #D9D9D9;
 `
 
 const InnerReviewContainer = styled.div`
@@ -15,7 +19,7 @@ const InnerReviewContainer = styled.div`
     flex-direction: column;
     gap: 16px;
     align-items: center;
-    width: 70%;
+    width: 80%;
     margin: auto;
 `
 
@@ -24,7 +28,6 @@ const StyledHeadline = styled.div`
     border-radius: 2px;
     padding: 12px;
     width: 100%;
-    background-color: white;
 `
 
 const StyledReviewTextArea = styled.textarea`
@@ -35,6 +38,7 @@ const StyledReviewTextArea = styled.textarea`
     resize: none;
     height: 200px;
     font-family: "Inter", "sans-serif";
+    background-color: transparent;
 `
 
 type ReviewModalProps = {
@@ -77,7 +81,9 @@ export function PostedReview(props: ReviewModalProps) {
                     {rating}
                 </StyledHeadline>
                 <StyledHeadline>
-                    {headline}
+                    <ParagraphTextBold>
+                        {headline}
+                    </ParagraphTextBold>
                 </StyledHeadline>
                 <StyledReviewTextArea 
                     readOnly={true}

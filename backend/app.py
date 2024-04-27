@@ -279,13 +279,13 @@ def get_books():
     connection = sqlite3.connect('book-recommendations.db')
     cursor = connection.cursor()
 
-    sql = """SELECT title FROM books;"""
+    sql = """SELECT title, book_id FROM books;"""
     cursor.execute(sql)
     data = cursor.fetchall()
     connection.commit()
     cursor.close()
 
-    json_data = json.dumps([{"title": row[0]} for row in data])
+    json_data = json.dumps([{"title": row[0], "book_id": row[1]} for row in data])
 
     return json_data
 

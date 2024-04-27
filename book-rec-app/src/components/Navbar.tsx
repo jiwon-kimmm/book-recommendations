@@ -9,13 +9,16 @@ import axios from 'axios';
 const NavbarContainer = styled.nav`
     width: 100%;
     height: 80px;
-    background-color: ${GRAY};
+    background-color: white;
     display: flex;
     flex-direction: column;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
+    border-bottom-style: solid;
+    border-bottom-color: #D9D9D9;
+    z-index: 2;
 `
 const LeftContainer = styled.div`
     flex: 33%;
@@ -54,13 +57,12 @@ const NavbarLink = styled(Link)`
     text-decoration: none;
     font-size: large;
     margin: 20px;
-`
-const NavbarExtendedContainer = styled.div`
-    
+    cursor: pointer;
 `
 
 type BookDataProps = {
     title: string;
+    book_id: string;
 }
 
 export default function Navbar() {
@@ -70,6 +72,7 @@ export default function Navbar() {
         axios.get('http://127.0.0.1:105/get-books')
             .then(res => {
                 setBookData(res.data); 
+                console.log(res.data);
                 // setBookData(dummyRecommendations);
             })
     }, [])
@@ -87,7 +90,7 @@ export default function Navbar() {
                 </LeftContainer>
                 <MiddleContainer>
                     <SearchBarDiv>
-                        <SearchBar placeholder="Search" data={bookData} />
+                        <SearchBar placeholder="Search for a book..." data={bookData} />
                     </SearchBarDiv>
                 </MiddleContainer>
                 <RightContainer>
@@ -96,7 +99,6 @@ export default function Navbar() {
                     </NavbarLinkContainer>
                 </RightContainer>
             </NavbarInnerContainer>
-            <NavbarExtendedContainer></NavbarExtendedContainer>
         </NavbarContainer>
     );
 }

@@ -20,7 +20,7 @@ const ListItem = styled.li`
     width: 100%;
     margin: 0;
     padding: 0;
-    display:flex;
+    display: flex;
     flex-direction: row;
 `
 const StyledRingLoader = styled(RingLoader)`
@@ -83,7 +83,7 @@ export default function Home() {
                             <StyledRingLoader 
                                 loading={loading}
                                 size={200}
-                                color="silver"
+                                color="#b9978540"
                             />
                         </LoadingScreen>
                     </MiddlePane>
@@ -114,7 +114,6 @@ export default function Home() {
                                                 book_id={bookRec[1]}
                                                 user_id={userId}
                                             />
-                                        
                                 </ListItem>
                             )) 
                             :
