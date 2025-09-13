@@ -84,9 +84,9 @@ export default function Navbar() {
                     <NavbarLinkContainer>
                         <NavbarLink to="/">Home</NavbarLink>
                     </NavbarLinkContainer>
-                    <NavbarLinkContainer>
+                    {/* <NavbarLinkContainer>
                         <NavbarLink to="/bestsellers">Best Sellers</NavbarLink>
-                    </NavbarLinkContainer>
+                    </NavbarLinkContainer> */}
                 </LeftContainer>
                 <MiddleContainer>
                     <SearchBarDiv>

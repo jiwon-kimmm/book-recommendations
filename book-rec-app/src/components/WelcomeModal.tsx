@@ -122,7 +122,7 @@ export function WelcomeModal() {
     return (
         <ModalWrapper>
             <Heading2Bold>{ login ? "Welcome back" : "Welcome" }</Heading2Bold>
-            <Heading3>Here is a blurb</Heading3>
+            {/* <Heading3>Here is a blurb</Heading3> */}
             <Form onSubmit={handleSubmit}>
                 <StyledInput 
                     type="text"

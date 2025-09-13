@@ -64,9 +64,9 @@ export default function Home() {
             });
         }
         
-        // setUserId(window.localStorage.getItem("userID") || '{}');
+        setUserId(window.localStorage.getItem("userID") || '{}');
         // setFormData({user_id: window.localStorage.getItem("userID") || '{}'});
-        setUserId("53425");
+        // setUserId("53425");
         fetchRecommendations();
         // setRecommendations(dummyRecommendations);
     }, []);

@@ -77,7 +77,7 @@ export default function MyProfile() {
             {!cookies.access_token ?
                 <>
                     <MiddlePane>
-                        (<WelcomeModal />)
+                        <WelcomeModal />
                     </MiddlePane>
                     <RightPane />
                 </>
