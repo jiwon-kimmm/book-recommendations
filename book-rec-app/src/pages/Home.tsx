@@ -8,7 +8,7 @@ import { ReviewModal } from '../components/ReviewModal';
 import RingLoader from 'react-spinners/RingLoader'
 import { LoadingMessages } from '../constants/LoadingMessages';
 import { useCookies } from 'react-cookie';
-import { dummyRecommendations } from '../data/books';
+import { WelcomeModal } from '../components/WelcomeModal';
 
 const List = styled.ul`
     list-style-type: none;
@@ -41,18 +41,23 @@ const LoadingScreen = styled.div`
 export default function Home() {
 
     const [loading, setLoading] = useState<boolean>(false);
-    const [formData, setFormData] = useState({user_id: "101"});
     const [recommendations, setRecommendations] = useState([]);
-    // const [recommendations, setRecommendations] = useState<{ title: string; author: string; rating: string; summary: string; isbn: string; image_url: string; book_id: number }[]>([]);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [cookies, setCookies] = useCookies(["access_token"]);
-    const [userId, setUserId] = useState("");
-
+    const [userId, setUserId] = useState(() => window.localStorage.getItem("userID") || "");
+    
     useEffect(() => {
+        if (!cookies?.access_token) return;
+
         const fetchRecommendations = async () => {
             setLoading(true);
                     
             const recommendationsUrl = 'http://127.0.0.1:105/recommendations'
+            const formData = new FormData();
+            const id = window.localStorage.getItem("userID") || "";
+            formData.append("user_id", id);
+
+            // formData.append('user_id', userId);
+
             axios.post(recommendationsUrl, formData, {
                 headers: { 
                     "Content-Type": "multipart/form-data" 
@@ -65,15 +70,20 @@ export default function Home() {
         }
         
         setUserId(window.localStorage.getItem("userID") || '{}');
-        // setFormData({user_id: window.localStorage.getItem("userID") || '{}'});
-        // setUserId("53425");
         fetchRecommendations();
-        // setRecommendations(dummyRecommendations);
-    }, []);
+    }, [cookies?.access_token]);
 
     return (
         <>
-                { loading ? 
+            { !cookies?.access_token ? (
+                <>
+                    <MiddlePane>
+                        <WelcomeModal />
+                    </MiddlePane>
+                    <RightPane />
+                </>
+            ) : loading ? (
+                // If logged in and loading
                 <>
                     <MiddlePane>
                         <LoadingScreen>
@@ -88,39 +98,28 @@ export default function Home() {
                         </LoadingScreen>
                     </MiddlePane>
                     <RightPane />
-                </>: 
-                    <List>
-                        {
-                            recommendations.length != 0 ?
-                            recommendations.map((bookRec) => (
-                                // <ListItem key={bookRec.isbn}>
-                                //             <BookCard 
-                                //                 title={bookRec.title}
-                                //                 author={bookRec.author}
-                                //                 rating={bookRec.rating}
-                                //                 summary={bookRec.summary}
-                                //                 image_url={bookRec.image_url}
-                                //                 book_id={bookRec.book_id}
-                                //                 user_id={userId}
-                                //             />
-                                // </ListItem>
-                                <ListItem key={bookRec[1]}>
-                                            <BookCard 
-                                                title={bookRec[0]}
-                                                author={bookRec[3]}
-                                                rating={bookRec[4]}
-                                                summary={bookRec[5]}
-                                                image_url={bookRec[6]}
-                                                book_id={bookRec[1]}
-                                                user_id={userId}
-                                            />
-                                </ListItem>
-                            )) 
-                            :
-                            <Heading1>None here</Heading1>
-                        }           
-                    </List>
-                }
+                </>
+            ) : (
+                <List>
+                    {recommendations.length !== 0 ? (
+                        recommendations.map((bookRec) => (
+                            <ListItem key={bookRec[1]}>
+                                <BookCard 
+                                    title={bookRec[0]}
+                                    author={bookRec[3]}
+                                    rating={bookRec[4]}
+                                    summary={bookRec[5]}
+                                    image_url={bookRec[6]}
+                                    book_id={bookRec[1]}
+                                    user_id={userId}
+                                />
+                            </ListItem>
+                        ))
+                    ) : (
+                        <Heading1>None here</Heading1>
+                    )}
+                </List>
+            )}
         </>
     );
 }

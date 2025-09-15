@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Heading1, Heading2, Heading3, ParagraphText } from "../constants/Text";
 import { GRAY } from "../constants/Colours";
 import HeartUnliked from "../assets/heart-unliked.svg"
+import HeartLiked from "../assets/heart-liked.svg"
 import CheckmarkChecked from "../assets/checkmark-checked.svg";
 import CheckmarkUnchecked from "../assets/checkmark-unchecked.svg"
 import { MiddlePane, RightPane } from "./MainPanel";
@@ -73,6 +74,15 @@ const BookInfoContainer = styled.div`
     flex-direction: column;
     text-align: left;
 `
+
+interface Review {
+    user_id: number;
+    book_id: number;
+    rating: number;
+    headline: string;
+    review: string;
+}
+
 interface BookCardProps {
     title: string;
     author: string;
@@ -83,36 +93,84 @@ interface BookCardProps {
     user_id: string;
 }
 
+interface Book {
+    book_id: number;
+    title: string;
+}
+
 export default function BookCard(props: BookCardProps) {
     const { title, author, rating, summary, image_url, book_id, user_id } = props;
     const [review, setReview] = useState<boolean>(false);
     const [reviewPresent, setReviewPresent] = useState<boolean>(false);
-    const [userReviews, setUserReviews] = useState([]);
+    const [userReviews, setUserReviews] = useState<Review[]>([]);
+    const [isLiked, setIsLiked] = useState<boolean>(false);
 
     useEffect(() => {
         const url = 'http://127.0.0.1:105/get-user-reviews';
-        axios.post(url, {user_id: user_id}, {
-            headers: { 
-                "Content-Type": "multipart/form-data" 
-            },
+        const formData = new FormData();
+        formData.append('user_id', user_id);
+
+        axios.post(url, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
         })
-            .then((response) => {
-                setUserReviews(response.data);
-        });
-    }, [review])
+        .then((response) => {
+            setUserReviews(response.data);
+        })
+        .catch(err => console.error(err));
+    }, [user_id]);
 
     useEffect(() => {
-        for (let i = 0; i < userReviews.length; ++i) {
-            if (+userReviews[i][1] == book_id) {
-               setReviewPresent(true);
-               break; 
+        const hasReviewed = userReviews.some(r => r.book_id === book_id);
+        setReviewPresent(hasReviewed);
+    }, [userReviews, book_id]);
+
+    useEffect(() => {
+        const fetchLikedBooks = async () => {
+            try {
+                const url = 'http://127.0.0.1:105/get-liked-books';
+                const formData = new FormData();
+                formData.append('user_id', user_id);
+
+                const res = await axios.post(url, formData);
+                const likedBooks: Book[]= res.data;
+                
+                const isLiked = likedBooks.some(book => book.book_id === book_id);
+                setIsLiked(isLiked);
+            } catch (err) {
+                console.error(err);
             }
-        }
-    }, [userReviews])
+        };
+
+        fetchLikedBooks();
+    }, [user_id, book_id]); // dependencies
+
+
+    const handleReviewSubmit = () => {
+        setReviewPresent(true);
+        setReview(false);
+    };
 
     const createReview = () => {
         setReview(!review);
     }
+
+    const handleHeartClick = async () => {
+    try {
+        const url = 'http://127.0.0.1:105/like-book';
+        const formData = new FormData();
+        formData.append('user_id', user_id);
+        formData.append('book_id', String(book_id));
+        formData.append('title', title);
+
+        await axios.post(url, formData);
+        setIsLiked(true);
+        window.dispatchEvent(new Event('book-liked'));
+    } catch (err) {
+        console.error("Error adding favorite:", err);
+    }
+
+};
+
 
     return (
         <>
@@ -131,7 +189,10 @@ export default function BookCard(props: BookCardProps) {
                             <ParagraphText>{summary}</ParagraphText>
                         </BookInfoContainer>
                         <ReactionContainer>
-                                <ReactionIcon src={HeartUnliked} />
+                                <ReactionIcon 
+                                    src={isLiked ? HeartLiked : HeartUnliked}
+                                    onClick={handleHeartClick} 
+                                />
                                 {
                                     reviewPresent ? 
                                     <ReactionIcon src={CheckmarkChecked}/> : 
@@ -143,7 +204,9 @@ export default function BookCard(props: BookCardProps) {
             </MiddlePane>
             <RightPane>
                 {review && !reviewPresent &&
-                    (<ReviewModal current_book_id={book_id}></ReviewModal>)
+                    (<ReviewModal 
+                        current_book_id={book_id}
+                        onSubmit={handleReviewSubmit}></ReviewModal>)
                 }
                 {reviewPresent &&
                     (

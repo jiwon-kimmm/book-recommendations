@@ -107,7 +107,6 @@ export function SearchBar(props: SearchBarProps) {
                     onChange={(e) => handleFilter(e)}
                 />
             </SearchInputDiv>
-            {/* { filteredData.length != 0 && !hideSearch && */}
             { filteredData.length != 0 &&
                 <DataResultDiv>
                     {filteredData.slice(0, 15).map((value, key) => {

@@ -99,10 +99,9 @@ def log_in():
             'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)
         },
             app.config['SECRET_KEY'])
-        print(data[0]) # data is a tuple (user_id, username, password)
+        # print(data[0]) # data is a tuple (user_id, username, password)
         return jsonify({'token': token, 'message': "user is in db", 'user_id': data[0]})
     else: 
-        print("huh")
         return make_response('Unable to verify', 401, {'WWW.Authenticate': 'Basic realm:"Authentication Failed!"'})
 
 
@@ -118,7 +117,6 @@ def load_dataset():
     ratings_dataset = Dataset.load_from_file("data/ratings.csv", reader=reader)
 
     # Create dictionary to lookup a book's name with its book_id as key
-    # book_id_to_name[book_id] = book_name
     book_id_to_name = {}
     with open('data/books.csv', newline='', encoding='ISO-8859-1') as csvfile:
         book_reader = csv.reader(csvfile)
@@ -128,7 +126,6 @@ def load_dataset():
             book_name = row[9]
             book_id_to_name[book_id] = book_name
     
-    print("YAYYYYYY")
     return (ratings_dataset, book_id_to_name)
 
 # book_id is raw id, not inner id
@@ -137,6 +134,14 @@ def getBookName(book_id, book_id_to_name):
     return book_id_to_name[int(book_id)]
   else:
     return ""
+  
+def getSummary(goodreads_book_id, title):
+    html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
+    soup = BeautifulSoup(html_text, 'lxml')
+    general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
+    summary = general_summary.find('span', class_ = 'Formatted').text
+    return summary
+
   
 @app.route('/recommendations', methods=['POST'])
 @cross_origin()
@@ -154,6 +159,7 @@ def recommendations():
 
     # Get user id from request
     user_id = request.form['user_id']
+    print("user id: " + user_id)
 
     connection = sqlite3.connect('book-recommendations.db')
     cursor = connection.cursor()
@@ -165,6 +171,7 @@ def recommendations():
 
     for rating in user_ratings:
         cleaned_user_ratings.append((trainset.to_inner_iid(str(rating[2])), rating[3])) # append tuple of (book_id, rating)
+        print(rating)
 
     # k_neighbours is in descending order
     # k_neighbours has 20 most similar items - items for which users have given similar ratings
@@ -211,10 +218,7 @@ def recommendations():
             average_rating = book[13]
             image_url = book[22]
 
-            html_text = requests.get(f"https://www.goodreads.com/book/show/{goodreads_book_id}.{title}").text
-            soup = BeautifulSoup(html_text, 'lxml')
-            general_summary = soup.find('div', class_ = 'BookPageMetadataSection__description')
-            summary = general_summary.find('span', class_ = 'Formatted').text
+            summary = getSummary(goodreads_book_id, title)
 
             recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary, image_url))
             position += 1
@@ -224,8 +228,6 @@ def recommendations():
 
     for rec in recommendations:
         print("Book: ", rec)
-
-    
 
     # recommendations is a list of tuples (title, raw item id)
     return jsonify(recommendations)
@@ -298,13 +300,35 @@ def get_user_reviews():
     connection = sqlite3.connect('book-recommendations.db')
     cursor = connection.cursor()
 
-    sql = f"SELECT * FROM reviews WHERE user_id='{user_id}';"
-    cursor.execute(sql)
-    data = cursor.fetchall() 
-    connection.commit()
+    sql = """
+        SELECT r.user_id, r.book_id, r.rating, r.headline, r.review,
+        b.title, b.authors, b.average_rating, b.image_url, b.isbn, b.goodreads_book_id
+        FROM reviews r
+        JOIN books b ON r.book_id = b.book_id
+        WHERE r.user_id = ?;
+    """
+    cursor.execute(sql, (user_id,))
+    data = cursor.fetchall()
     cursor.close()
+    reviews = [
+        {
+            "user_id": row[0],
+            "book_id": row[1],
+            "rating": row[2],
+            "headline": row[3],
+            "review": row[4],
+            "title": row[5],
+            "author": row[6],
+            "average_rating": row[7],
+            "image_url": row[8],
+            "isbn": row[9],
+            "summary": getSummary(row[10], row[5])
+        }
 
-    return jsonify(data)
+        for row in data
+    ]
+    return jsonify(reviews)
+
 
 @app.route('/get-specific-review', methods=['POST'])
 @cross_origin()
@@ -330,14 +354,77 @@ def get_book():
 
     connection = sqlite3.connect('book-recommendations.db')
     cursor = connection.cursor()
-
-    sql = f"SELECT * FROM books WHERE book_id='{book_id}';"
+    sql = f"SELECT book_id, goodreads_book_id, isbn, authors, title, average_rating, image_url FROM books WHERE book_id='{book_id}';"
     cursor.execute(sql)
     data = cursor.fetchone() 
     connection.commit()
     cursor.close()
 
-    return jsonify(data) 
+    if data:
+        goodreads_book_id = data[1]
+        title = data[4]
+
+        book = {
+            "book_id": data[0],
+            "goodreads_book_id": goodreads_book_id,
+            "title": title,
+            "author": data[3],
+            "average_rating": data[5],
+            "image_url": data[6],
+            "isbn": data[2],
+            "summary": getSummary(goodreads_book_id, title)
+        }
+        
+        return jsonify(book)
+    
+    return jsonify({"error": "Book not found"}), 404
+
+
+@app.route('/like-book', methods=['POST'])
+@cross_origin()
+def like_book():
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    user_id = request.form['user_id']
+    book_id = request.form['book_id']
+    title = request.form['title']
+
+    sql = """INSERT INTO liked_books (user_id, book_id, title)
+         VALUES (?, ?, ?)"""
+    cursor.execute(sql, (user_id, book_id, title))
+    connection.commit()
+
+    cursor.close()
+
+    return jsonify({'user_id': user_id, 'book_id': book_id, 'title': title})
+
+@app.route('/get-liked-books', methods=['POST'])
+@cross_origin()
+def get_liked_books():
+    user_id = request.form['user_id']
+
+    connection = sqlite3.connect('book-recommendations.db')
+    cursor = connection.cursor()
+
+    sql = """
+        SELECT DISTINCT *
+        FROM liked_books b
+        WHERE b.user_id = ?;
+    """
+    cursor.execute(sql, (user_id,))
+    data = cursor.fetchall()
+    cursor.close()
+    reviews = [
+        {
+            "user_id": row[0],
+            "book_id": row[1],
+            "title": row[2]
+        }
+
+        for row in data
+    ]
+    return jsonify(reviews)
 
 
 if __name__ == '__main__':

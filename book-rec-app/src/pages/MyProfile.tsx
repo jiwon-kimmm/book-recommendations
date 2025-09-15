@@ -1,10 +1,10 @@
-import { Heading1, Heading2Bold, ParagraphTextBold } from '../constants/Text';
+import { Heading1, Heading2Bold, Heading2, ParagraphTextBold } from '../constants/Text';
 import { MiddlePane, RightPane } from '../components/MainPanel';
 import { WelcomeModal } from '../components/WelcomeModal';
 import { useCookies } from 'react-cookie';
 import styled from 'styled-components';
-import { dummyRecommendations } from '../data/books';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 
 const MainPane = styled.div`
@@ -12,6 +12,7 @@ const MainPane = styled.div`
     padding: 10px;
     margin-top: 20px;
     flex-direction: column;
+    width: 90%;
 `
 
 const BookCarouselWrapper = styled.div`
@@ -57,21 +58,45 @@ const LogoutButton = styled.button`
     &:hover {
         opacity: 1;
     }
+    align-self: flex-end;
 `
 
 export default function MyProfile() {
     const [cookies, setCookies] = useCookies(["access_token"]);
-    // const [topBooks, setTopBooks] = useState([]);
     const [topBooks, setTopBooks] = useState<{ title: string; author: string; rating: string; summary: string; isbn: string; image_url: string; book_id: number }[]>([]);
+    const [userId, setUserId] = useState(() => window.localStorage.getItem("userID") || null);
 
     useEffect(() => {
-        setTopBooks(dummyRecommendations);
-    }, [])
+
+        const fetchReviewedBooks = async () => {
+            try {
+                const formData = new FormData();
+                formData.append("user_id", userId || "");
+
+                const reviewsRes = await axios.post(
+                    "http://127.0.0.1:105/get-user-reviews",
+                    formData,
+                    {
+                        headers: { "Content-Type": "multipart/form-data" },
+                    }
+                );
+
+                const userReviews = reviewsRes.data;
+
+                setTopBooks(userReviews); // set state
+            } catch (err) {
+                console.error("Failed to load top books", err);
+            }
+        };
+
+        fetchReviewedBooks();
+    }, []);
 
     const logout = () => {
         setCookies("access_token", "")
         window.localStorage.removeItem("userID");
     }
+
     return (
         <>
             {!cookies.access_token ?
@@ -86,39 +111,23 @@ export default function MyProfile() {
                 <Heading1>My Profile</Heading1>
                 <BookCarouselWrapper>
                     <Heading2Bold>
-                        My Top Books
+                        Books I've Reviewed
                     </Heading2Bold>
                     <BookCarousel>
                         {topBooks.length != 0 ?
                             topBooks.map((book) => (
                                 <ListItem key={book.book_id}>
-                                    {/* {book.title} */}
                                     <ImageContainer>
                                         <StyledImage src={book.image_url} />
                                     </ImageContainer>
-                                    {/* <img src={book.image_url} /> */}
+                                    <div>
+                                        <h3>{book.title}</h3>
+                                        <p>{book.author}</p>
+                                        <p>Your rating: {book.rating}</p>
+                                    </div>
                                 </ListItem>
                             )):
-                            <Heading1>none here</Heading1>
-                        }
-                    </BookCarousel> 
-                </BookCarouselWrapper>
-                <BookCarouselWrapper>
-                    <Heading2Bold>
-                        My Top Books
-                    </Heading2Bold>
-                    <BookCarousel>
-                        {topBooks.length != 0 ?
-                            topBooks.map((book) => (
-                                <ListItem key={book.book_id}>
-                                    {/* {book.title} */}
-                                    <ImageContainer>
-                                        <StyledImage src={book.image_url} />
-                                    </ImageContainer>
-                                    {/* <img src={book.image_url} /> */}
-                                </ListItem>
-                            )):
-                            <Heading1>none here</Heading1>
+                            <Heading2>Nothing to see here...</Heading2>
                         }
                     </BookCarousel> 
                 </BookCarouselWrapper>

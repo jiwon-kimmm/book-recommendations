@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { GRAY } from "../constants/Colours";
 import axios from "axios";
-import { ParagraphTextBold } from "../constants/Text";
+import { ParagraphTextBold, Heading3 } from "../constants/Text";
 
 const ReviewModalContainer = styled.div`
     width: 75%;
@@ -23,6 +23,11 @@ const Form = styled.form`
     margin: auto;
     margin-top: 50px;
 `
+
+const ModalHeading = styled.h3`
+    margin: 0;
+    padding: 0;
+`;
 
 const StyledInput = styled.input`
     border-style: solid;
@@ -77,10 +82,11 @@ const defaultFormData = {
 
 type ReviewModalProps = {
     current_book_id: number;
+    onSubmit: () => void;
 }
 
 export function ReviewModal(props: ReviewModalProps) {
-    const { current_book_id } = props;
+    const { current_book_id, onSubmit } = props;
     const [formData, setFormData] = useState(defaultFormData);
     const { user_id, book_id, rating, headline, review } = formData;
 
@@ -132,6 +138,7 @@ export function ReviewModal(props: ReviewModalProps) {
         })
             .then((response) => {
                 console.log(response.data);
+                onSubmit();
         });
     }
 
@@ -139,6 +146,7 @@ export function ReviewModal(props: ReviewModalProps) {
     return (
         <ReviewModalContainer>
             <Form onSubmit={handleSubmit}>
+                <ModalHeading>Write a Review</ModalHeading>
                 <StyledInput
                     type="number"
                     id="rating"
@@ -150,7 +158,7 @@ export function ReviewModal(props: ReviewModalProps) {
                     id="headline"
                     value={headline}
                     placeholder={ "Write a headline..."}
-                    onChange={onHeadlineChange} // shorthand for onChange={(e) => onChange(e)}
+                    onChange={onHeadlineChange}
                 />
                 <StyledReviewTextArea 
                     id="review"

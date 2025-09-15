@@ -6,34 +6,32 @@ import axios from "axios";
 
 export default function BookView () {
     const params = useParams();
-    const [bookInfo, setBookInfo] = useState([]);
+    const [bookInfo, setBookInfo] = useState<any | null>(null);
 
     useEffect(() => {
         const url = 'http://127.0.0.1:105/get-book';
+        const formData = new FormData();
+        formData.append('book_id', params.bookId || '');
 
-        axios.post(url, {book_id: params.bookId}, {
-            headers: { 
-                "Content-Type": "multipart/form-data" 
-            },
-        })
-            .then((response) => {
-                setBookInfo(response.data);
-        });
-    }, [])
+        axios.post(url, formData)
+            .then((response) => setBookInfo(response.data))
+            .catch(err => console.error(err));
+    }, [params.bookId]);
 
-    
 
     return (
         <>
-            <BookCard
-                title={bookInfo[11]}
-                author={bookInfo[8]}
-                rating={bookInfo[13]}
-                summary={"Summary"}
-                image_url={bookInfo[22]}
-                book_id={bookInfo[1]}
-                user_id={window.localStorage.getItem("userID") || ""}
-            />
+            {bookInfo && (
+                <BookCard
+                    title={bookInfo.title}
+                    author={bookInfo.author}
+                    rating={bookInfo.average_rating}
+                    summary={bookInfo.summary}
+                    image_url={bookInfo.image_url}
+                    book_id={bookInfo.book_id}
+                    user_id={window.localStorage.getItem("userID") || ""}
+                />
+            )}
         </>
     );
 } 

@@ -72,8 +72,6 @@ export default function Navbar() {
         axios.get('http://127.0.0.1:105/get-books')
             .then(res => {
                 setBookData(res.data); 
-                console.log(res.data);
-                // setBookData(dummyRecommendations);
             })
     }, [])
 
@@ -84,9 +82,6 @@ export default function Navbar() {
                     <NavbarLinkContainer>
                         <NavbarLink to="/">Home</NavbarLink>
                     </NavbarLinkContainer>
-                    {/* <NavbarLinkContainer>
-                        <NavbarLink to="/bestsellers">Best Sellers</NavbarLink>
-                    </NavbarLinkContainer> */}
                 </LeftContainer>
                 <MiddleContainer>
                     <SearchBarDiv>

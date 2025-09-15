@@ -100,7 +100,6 @@ export function WelcomeModal() {
                     setCookies("access_token", response.data.token);
                     window.localStorage.setItem("userID", response.data.user_id);
                     // navigate("/")
-                    navigate("/bestsellers")
                 })
                 .catch((error) => {
                     setError(true);
