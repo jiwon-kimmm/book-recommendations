@@ -2,3 +2,4 @@ backend/venv
 backend/book-recommendations.db
 similarity-matrix.npy
 .vscode/*
+venv
