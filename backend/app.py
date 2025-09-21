@@ -29,6 +29,32 @@ cors = CORS(app)
 app.config['CORS_HEADER'] = 'Content-Type'
 app.config['SECRET_KEY'] = b'\xb5ek9Q\x82\xea:I\x08\x1cF'
 
+def load_dataset():
+    reader = Reader(line_format="user item rating", sep=',', skip_lines=1)
+    ratings_dataset = Dataset.load_from_file("data/ratings.csv", reader=reader)
+
+    # Create dictionary to lookup a book's name with its book_id as key
+    book_id_to_name = {}
+    with open('data/books.csv', newline='', encoding='ISO-8859-1') as csvfile:
+        book_reader = csv.reader(csvfile)
+        next(book_reader)
+        for row in book_reader:
+            book_id = int(row[0])
+            book_name = row[9]
+            book_id_to_name[book_id] = book_name
+    
+    return (ratings_dataset, book_id_to_name)
+
+# Create similarity matrix from dataset
+ratings_dataset, book_id_to_name = load_dataset()
+trainset = ratings_dataset.build_full_trainset()
+similarity_matrix = KNNBasic(sim_options = {
+        'name': 'cosine',
+        'user_based': False # Don't want to find similarity between users, we want item-based collaborative filtering
+        })\
+        .fit(trainset)\
+        .compute_similarities()
+
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs):
@@ -112,22 +138,6 @@ def log_in():
 def protected():
     return jsonify({'message': 'This is only available for people with valid tokens.'})
 
-def load_dataset():
-    reader = Reader(line_format="user item rating", sep=',', skip_lines=1)
-    ratings_dataset = Dataset.load_from_file("data/ratings.csv", reader=reader)
-
-    # Create dictionary to lookup a book's name with its book_id as key
-    book_id_to_name = {}
-    with open('data/books.csv', newline='', encoding='ISO-8859-1') as csvfile:
-        book_reader = csv.reader(csvfile)
-        next(book_reader)
-        for row in book_reader:
-            book_id = int(row[0])
-            book_name = row[9]
-            book_id_to_name[book_id] = book_name
-    
-    return (ratings_dataset, book_id_to_name)
-
 # book_id is raw id, not inner id
 def getBookName(book_id, book_id_to_name):
   if int(book_id) in book_id_to_name:
@@ -147,16 +157,6 @@ def getSummary(goodreads_book_id, title):
 @cross_origin()
 def recommendations():
 
-    # Create similarity matrix from dataset
-    ratings_dataset, book_id_to_name = load_dataset()
-    trainset = ratings_dataset.build_full_trainset()
-    similarity_matrix = KNNBasic(sim_options = {
-         'name': 'cosine',
-         'user_based': False # Don't want to find similarity between users, we want item-based collaborative filtering
-         })\
-         .fit(trainset)\
-         .compute_similarities()
-
     # Get user id from request
     user_id = request.form['user_id']
     print("user id: " + user_id)
@@ -173,58 +173,78 @@ def recommendations():
         cleaned_user_ratings.append((trainset.to_inner_iid(str(rating[2])), rating[3])) # append tuple of (book_id, rating)
         print(rating)
 
-    # k_neighbours is in descending order
-    # k_neighbours has 20 most similar items - items for which users have given similar ratings
-    k_neighbours = heapq.nlargest(20, cleaned_user_ratings, key=lambda t: t[1])
-
-    # candidates[item_inner_id] = score_sum
-    candidates = defaultdict(float)
-
-    for item_id, rating in k_neighbours:
-        try:
-            # Find most similar items to each item_id in k_neighbours
-            # Contains item_inner_id and similarity score
-            similarities = similarity_matrix[item_id]
-            for item_inner_id, score in enumerate(similarities):
-                # For each similar item, add it to candidates dictionary
-                # If the similar item is already in candidates, add to the existing score
-                candidates[item_inner_id] += score * (rating / 5.0)
-        except:
-            continue
-
-    # Build a dictionary of books the user has already read
-    has_read = {}
-    for item_inner_id, rating in cleaned_user_ratings:
-        has_read[item_inner_id] = 1
-
-    # Add items to list of user's recommendations if they are similar AND has not already been read
     recommendations = []
 
-    position = 0
-    # candidates.items() contains the key-value pairs of the dictionary, as tuples in a list
-    # each tuple is (item_inner_id, rating_sum)
-    for item_inner_id, rating_sum in sorted(candidates.items(), key=itemgetter(1), reverse=True):
-        # Add book to recommendations if user has not read it
-        if not item_inner_id in has_read:
-            raw_book_id = trainset.to_raw_iid(item_inner_id)
+    if cleaned_user_ratings:
+        k_neighbours = heapq.nlargest(20, cleaned_user_ratings, key=lambda t: t[1])
 
-            statement = f"SELECT * FROM books WHERE book_id='{raw_book_id}';"
-            cursor.execute(statement)
-            book = cursor.fetchone()  # book is a list of tuples
+        # candidates[item_inner_id] = score_sum
+        candidates = defaultdict(float)
 
+        for item_id, rating in k_neighbours:
+            try:
+                # Find most similar items to each item_id in k_neighbours
+                # Contains item_inner_id and similarity score
+                similarities = similarity_matrix[item_id]
+                for item_inner_id, score in enumerate(similarities):
+                    # For each similar item, add it to candidates dictionary
+                    # If the similar item is already in candidates, add to the existing score
+                    candidates[item_inner_id] += score * (rating / 5.0)
+            except:
+                continue
+
+        # Build a dictionary of books the user has already read
+        has_read = {}
+        for item_inner_id, rating in cleaned_user_ratings:
+            has_read[item_inner_id] = 1
+
+        # Add items to list of user's recommendations if they are similar AND has not already been read
+
+        position = 0
+        # candidates.items() contains the key-value pairs of the dictionary, as tuples in a list
+        # each tuple is (item_inner_id, rating_sum)
+        for item_inner_id, rating_sum in sorted(candidates.items(), key=itemgetter(1), reverse=True):
+            # Add book to recommendations if user has not read it
+            if not item_inner_id in has_read:
+                raw_book_id = trainset.to_raw_iid(item_inner_id)
+
+                statement = f"SELECT * FROM books WHERE book_id='{raw_book_id}';"
+                cursor.execute(statement)
+                book = cursor.fetchone()  # book is a list of tuples
+
+                title = book[10]
+                goodreads_book_id = book[2]
+                authors = book[8]
+                average_rating = book[13]
+                image_url = book[22]
+
+                summary = getSummary(goodreads_book_id, title)
+
+                recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary, image_url))
+                position += 1
+                if (position > 10): break  # We only want top 10
+
+        cursor.close()
+    else:
+        # Fallback: recommend top 10 most popular books
+        statement = """
+            SELECT * FROM books 
+            ORDER BY average_rating DESC, ratings_count DESC
+            LIMIT 10;
+        """
+        cursor.execute(statement)
+        popular_books = cursor.fetchall()
+        
+        for book in popular_books:
             title = book[10]
+            raw_book_id = book[1]
             goodreads_book_id = book[2]
             authors = book[8]
             average_rating = book[13]
             image_url = book[22]
-
             summary = getSummary(goodreads_book_id, title)
 
-            recommendations.append((getBookName(raw_book_id, book_id_to_name), raw_book_id, goodreads_book_id, authors, average_rating, summary, image_url))
-            position += 1
-            if (position > 10): break  # We only want top 10
-
-    cursor.close()
+            recommendations.append((title, raw_book_id, goodreads_book_id, authors, average_rating, summary, image_url))
 
     for rec in recommendations:
         print("Book: ", rec)
@@ -390,7 +410,7 @@ def like_book():
     book_id = request.form['book_id']
     title = request.form['title']
 
-    sql = """INSERT INTO liked_books (user_id, book_id, title)
+    sql = """INSERT OR IGNORE INTO liked_books (user_id, book_id, title)
          VALUES (?, ?, ?)"""
     cursor.execute(sql, (user_id, book_id, title))
     connection.commit()
@@ -398,6 +418,22 @@ def like_book():
     cursor.close()
 
     return jsonify({'user_id': user_id, 'book_id': book_id, 'title': title})
+
+@app.route('/unlike-book', methods=['DELETE'])
+@cross_origin()
+def unlike_book():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    book_id = data.get('book_id')
+
+    with sqlite3.connect('book-recommendations.db') as connection:
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM liked_books WHERE user_id=? AND book_id=?", (user_id, book_id))
+        connection.commit()
+        rows_deleted = cursor.rowcount
+
+    status = "unliked" if rows_deleted > 0 else "not_found"
+    return jsonify({'user_id': user_id, 'book_id': book_id, 'status': status})
 
 @app.route('/get-liked-books', methods=['POST'])
 @cross_origin()

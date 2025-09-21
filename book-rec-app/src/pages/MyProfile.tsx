@@ -4,6 +4,7 @@ import { WelcomeModal } from '../components/WelcomeModal';
 import { useCookies } from 'react-cookie';
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 
@@ -65,6 +66,7 @@ export default function MyProfile() {
     const [cookies, setCookies] = useCookies(["access_token"]);
     const [topBooks, setTopBooks] = useState<{ title: string; author: string; rating: string; summary: string; isbn: string; image_url: string; book_id: number }[]>([]);
     const [userId, setUserId] = useState(() => window.localStorage.getItem("userID") || null);
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -116,7 +118,11 @@ export default function MyProfile() {
                     <BookCarousel>
                         {topBooks.length != 0 ?
                             topBooks.map((book) => (
-                                <ListItem key={book.book_id}>
+                                <ListItem 
+                                    key={book.book_id}
+                                    onClick={() => navigate(`/${book.book_id}`)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                     <ImageContainer>
                                         <StyledImage src={book.image_url} />
                                     </ImageContainer>

@@ -49,11 +49,11 @@ export default function Bookshelf () {
     useEffect(() => {
         fetchLikedBooks(); // initial fetch
 
-        // Listen for "book-liked" events
+        // Listen for "book-like-action" events
         const listener = () => fetchLikedBooks();
-        window.addEventListener('book-liked', listener);
+        window.addEventListener('book-like-action', listener);
 
-        return () => window.removeEventListener('book-liked', listener);
+        return () => window.removeEventListener('book-like-action', listener);
     }, [userId]);
 
     return (

@@ -155,21 +155,36 @@ export default function BookCard(props: BookCardProps) {
     }
 
     const handleHeartClick = async () => {
-    try {
-        const url = 'http://127.0.0.1:105/like-book';
-        const formData = new FormData();
-        formData.append('user_id', user_id);
-        formData.append('book_id', String(book_id));
-        formData.append('title', title);
+       
+        if (isLiked) {
+            // Book is currently liked → user wants to unlike
+            try {
+                const url = 'http://127.0.0.1:105/unlike-book';
+                await axios.delete(url, { data: { user_id, book_id } });
 
-        await axios.post(url, formData);
-        setIsLiked(true);
-        window.dispatchEvent(new Event('book-liked'));
-    } catch (err) {
-        console.error("Error adding favorite:", err);
-    }
+                setIsLiked(false);
+                window.dispatchEvent(new Event("book-like-action"));
+            } catch (err) {
+                console.error("Error removing favorite:", err);
+            }
+        } else {
+            // Book is currently not liked → user wants to like
+            try {
+                const url = 'http://127.0.0.1:105/like-book';
+                const formData = new FormData();
+                formData.append('user_id', user_id);
+                formData.append('book_id', String(book_id));
+                formData.append('title', title);
 
-};
+                await axios.post(url, formData);
+
+                setIsLiked(true);
+                window.dispatchEvent(new Event("book-like-action"));
+            } catch (err) {
+                console.error("Error adding favorite:", err);
+            }
+        }
+    };
 
 
     return (
