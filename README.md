@@ -7,8 +7,13 @@ PagePilot guides your reading journey by providing book recommendations based on
 ```bash
 # backend
 cd backend
+# set up virtual environment
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+# prepare database, only have to do on first setup
 python db.py
+# run backend
 python app.py
 ```
 ```bash
